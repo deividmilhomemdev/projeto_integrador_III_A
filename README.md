@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="painel-bi/assets/logo.png" alt="Ouvidoria da Mulher - Câmara Municipal de Goiânia" width="170">
+  <img src="assets/logo.png" alt="Ouvidoria da Mulher - Câmara Municipal de Goiânia" width="170">
 </p>
 
 <h1 align="center">Portal Gerencial da Ouvidoria da Mulher</h1>
