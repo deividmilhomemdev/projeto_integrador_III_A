@@ -55,7 +55,7 @@ O programa de voluntariado foi formalizado em agosto de 2021. Nele, psicólogas 
 
 ## 2. Problema identificado
 
-Até o início da parceria, o controle dos atendimentos era feito com formulários on-line e anotações em bloco de texto. Em projetos integradores anteriores foi desenvolvido um [aplicativo em Flutter](https://ouvidoriadamulhergoianiavoluntariado.netlify.app/), ligado a um banco PostgreSQL no Supabase. Nele, cada psicóloga vincula suas assistidas e registra as sessões realizadas, em andamento ou com desistência. Durante este trabalho, a base já reunia **cerca de 780 sessões**.
+Até o início da parceria, o controle dos atendimentos era feito com formulários on-line e anotações em bloco de texto. Em projetos integradores anteriores foi desenvolvido um aplicativo em Flutter, ligado a um banco PostgreSQL no Supabase. Nele, cada psicóloga vincula suas assistidas e registra as sessões realizadas, em andamento ou com desistência. Durante este trabalho, a base já reunia **cerca de 780 sessões**.
 
 Os dados existiam, mas não havia uma forma simples de consultá-los de maneira consolidada. A tela administrativa do aplicativo oferece apenas um resumo, e consultar o banco diretamente exige conhecimento técnico. A coordenação levantou três demandas:
 
