@@ -243,7 +243,7 @@ A autorização **não depende só da interface**. A função `is_admin_painel()
 ### 4.2 Demonstração à instituição
 
 - **Protótipo:** a versão com dados simulados foi apresentada à coordenação e aprovada como referência de conteúdo e de layout.
-- **Versão funcional:** já conectada ao banco real, foi demonstrada em **[DATA]**, **[presencialmente / on-line]**, para **[NOME E FUNÇÃO DA(S) REPRESENTANTE(S)]**. A apresentação mostrou o login, as abas, os filtros, os detalhamentos e a exportação das planilhas.
+- **Versão funcional:** já conectada ao banco real, foi demonstrada em **20/11/2026**, **on-line**, para **[Maria Clara e Jaqueline, ambas Coordenadoras do Programa "Acolha uma mulher"**. A apresentação mostrou o login, as abas, os filtros, os detalhamentos e a exportação das planilhas.
 - **Ajustes incorporados na validação:**
   - linha de total nas tabelas;
   - correção da visualização de materiais que têm texto e link ao mesmo tempo;
