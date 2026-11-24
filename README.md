@@ -305,7 +305,6 @@ A autorização **não depende só da interface**. A função `is_admin_painel()
    Depois acesse <http://localhost:8080>. Abrir o `index.html` com dois cliques não funciona, por causa da política de segurança (CSP).
 6. **Publicação:** no Netlify, vá em **Add new site → Deploy manually** e arraste a pasta `painel-bi` inteira.
 
-O passo a passo detalhado, com o caminho de cada menu, solução de problemas e riscos registrados, está em [`GUIA_IMPLANTACAO.md`](GUIA_IMPLANTACAO.md).
 
 ---
 
