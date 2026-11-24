@@ -215,10 +215,6 @@ A autorização **não depende só da interface**. A função `is_admin_painel()
   <sub><b>Figura 2:</b> Resumo Geral com indicadores e evolução mensal.</sub>
 </p>
 
-<p align="center">
-  <img src="docs/img/voluntarias.png" alt="Detalhamento de voluntárias" width="820"><br>
-  <sub><b>Figura 3:</b> Detalhamento de voluntárias com linha de total.</sub>
-</p>
 
 <table align="center">
   <tr>
