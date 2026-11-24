@@ -226,7 +226,6 @@ A autorização **não depende só da interface**. A função `is_admin_painel()
     <td align="center"><sub>(b) Detalhamento mensal por voluntária</sub></td>
   </tr>
 </table>
-<p align="center"><sub><b>Figura 4:</b> Controle de acesso e detalhamento mensal.</sub></p>
 
 <p align="center">
   <img src="docs/img/links.png" alt="Links Úteis" width="820"><br>
