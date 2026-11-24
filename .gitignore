@@ -1,0 +1,14 @@
+# Configuracao real do Supabase (URL + chave). Nao versionar.
+# No repositorio vai apenas painel-bi/assets/config.exemplo.js
+painel-bi/assets/config.js
+
+# Arquivos de uso interno (nao fazem parte da entrega)
+HISTORICO_DO_PROJETO.md
+*.docx
+~$*
+
+# Sistema e editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/

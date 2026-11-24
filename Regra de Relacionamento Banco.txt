@@ -1,0 +1,5 @@
+tb_usuario (1) ➔ tb_assistida (N): Uma psicóloga voluntária pode acompanhar zero ou várias assistidas. Cada assistida é vinculada a uma voluntária responsável por meio da chave estrangeira id_usuario.
+
+tb_assistida (1) ➔ tb_sessao (N): Uma assistida pode ter múltiplas sessões agendadas, concluídas ou com desistência. Cada sessão referencia obrigatoriamente sua assistida via id_assistida.
+
+tb_informacoes (Independente): Funciona como o catálogo da Central de Apoio (textos, PDFs e imagens armazenados no bucket informativos do Supabase Storage), com manutenção liberada na interface apenas para perfis com acesso_adm = 1.

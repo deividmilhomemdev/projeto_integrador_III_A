@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ouvidoria BI - Dashboard</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Configuração de Cores Customizadas do Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ouvidoria: {
+                            main: '#6A1B9A',
+                            light: '#9c4dcc',
+                            dark: '#38006b',
+                            bg: '#f3f4f6'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1em;
+        }
+    </style>
+</head>
+<body class="bg-ouvidoria-bg text-gray-800 font-sans h-screen flex overflow-hidden">
+
+    <!-- Menu Lateral (Sidebar) -->
+    <aside class="bg-ouvidoria-main text-white w-64 flex-shrink-0 hidden md:flex flex-col shadow-2xl z-20 transition-all duration-300" id="sidebar">
+        <div class="p-6 flex items-center border-b border-ouvidoria-light/30">
+            <div class="bg-white/20 p-2 rounded-lg mr-3">
+                <i class="fa-solid fa-shield-heart text-2xl"></i>
+            </div>
+            <h1 class="text-xl font-bold tracking-wide">Ouvidoria BI</h1>
+        </div>
+        
+        <nav class="flex-1 px-4 py-6 space-y-2">
+            <button onclick="window.switchTab('painel')" id="btn-painel" class="nav-btn w-full flex items-center px-4 py-3 bg-white/20 text-white rounded-lg transition-colors font-medium">
+                <i class="fa-solid fa-chart-line w-6 text-center"></i>
+                Resumo Geral
+            </button>
+            <button onclick="window.switchTab('voluntarias')" id="btn-voluntarias" class="nav-btn w-full flex items-center px-4 py-3 text-white/70 hover:bg-white/10 hover:text-white rounded-lg transition-colors font-medium">
+                <i class="fa-solid fa-user-doctor w-6 text-center"></i>
+                Voluntárias
+            </button>
+            <button onclick="window.switchTab('assistidas')" id="btn-assistidas" class="nav-btn w-full flex items-center px-4 py-3 text-white/70 hover:bg-white/10 hover:text-white rounded-lg transition-colors font-medium">
+                <i class="fa-solid fa-users w-6 text-center"></i>
+                Assistidas
+            </button>
+            <button onclick="window.switchTab('materiais')" id="btn-materiais" class="nav-btn w-full flex items-center px-4 py-3 text-white/70 hover:bg-white/10 hover:text-white rounded-lg transition-colors font-medium">
+                <i class="fa-solid fa-folder-open w-6 text-center"></i>
+                Materiais
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-ouvidoria-light/30 text-center text-xs text-white/60">
+            <p>Portal Gerencial v2.0</p>
+        </div>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        
+        <!-- Barra Superior (Header) -->
+        <header class="bg-white shadow-sm border-b border-gray-200 z-10">
+            <div class="px-4 py-3 md:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                
+                <!-- Título e Menu Mobile -->
+                <div class="flex items-center justify-between w-full md:w-auto">
+                    <button onclick="window.toggleMobileMenu()" class="md:hidden text-ouvidoria-main focus:outline-none mr-3">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                        <i class="fa-solid fa-filter text-ouvidoria-light mr-2 text-base"></i> Segmentadores
+                    </h2>
+                </div>
+
+                <!-- Filtros (Dropdowns) -->
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <select class="bg-gray-50 border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-ouvidoria-main focus:border-ouvidoria-main block p-2.5 pr-8 outline-none shadow-sm cursor-pointer">
+                        <option value="">Todos os Meses</option>
+                        <option value="jan">Janeiro</option>
+                        <option value="fev">Fevereiro</option>
+                        <option value="mar">Março</option>
+                        <option value="abr">Abril</option>
+                        <option value="mai">Maio</option>
+                        <option value="jun">Junho</option>
+                    </select>
+
+                    <select class="bg-gray-50 border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-ouvidoria-main focus:border-ouvidoria-main block p-2.5 pr-8 outline-none shadow-sm cursor-pointer">
+                        <option value="">Todas as Voluntárias</option>
+                        <option value="1">Dra. Amanda Souza</option>
+                        <option value="2">Beatriz Lima</option>
+                        <option value="3">Carolina Mendes</option>
+                        <option value="4">Dra. Fernanda Costa</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Menu Mobile Dropdown -->
+            <div id="mobile-menu" class="hidden md:hidden bg-ouvidoria-main shadow-xl border-t border-ouvidoria-light/20 absolute w-full z-20">
+                <nav class="flex flex-col p-2">
+                    <button onclick="window.switchTab('painel'); window.toggleMobileMenu()" class="w-full text-left px-4 py-3 text-white font-medium hover:bg-white/10 rounded"><i class="fa-solid fa-chart-line w-6"></i> Resumo Geral</button>
+                    <button onclick="window.switchTab('voluntarias'); window.toggleMobileMenu()" class="w-full text-left px-4 py-3 text-white/80 font-medium hover:bg-white/10 hover:text-white rounded"><i class="fa-solid fa-user-doctor w-6"></i> Voluntárias</button>
+                    <button onclick="window.switchTab('assistidas'); window.toggleMobileMenu()" class="w-full text-left px-4 py-3 text-white/80 font-medium hover:bg-white/10 hover:text-white rounded"><i class="fa-solid fa-users w-6"></i> Assistidas</button>
+                    <button onclick="window.switchTab('materiais'); window.toggleMobileMenu()" class="w-full text-left px-4 py-3 text-white/80 font-medium hover:bg-white/10 hover:text-white rounded"><i class="fa-solid fa-folder-open w-6"></i> Materiais</button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Área de Rolagem do Conteúdo -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar bg-ouvidoria-bg">
+            
+            <!-- ========================================= -->
+            <!-- ABA 1: PAINEL PRINCIPAL                   -->
+            <!-- ========================================= -->
+            <section id="painel" class="tab-content active max-w-7xl mx-auto">
+                
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-md border-l-4 border-purple-600 p-6 flex items-center justify-between transform transition hover:-translate-y-1 cursor-default">
+                        <div>
+                            <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-1">Vol. Atendimentos</p>
+                            <h3 class="text-3xl font-bold text-gray-800">1.240</h3>
+                        </div>
+                        <div class="rounded-full bg-purple-50 p-4 text-purple-600">
+                            <i class="fa-solid fa-handshake-angle text-2xl"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md border-l-4 border-blue-500 p-6 flex items-center justify-between transform transition hover:-translate-y-1 cursor-default">
+                        <div>
+                            <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-1">Voluntárias Ativas</p>
+                            <h3 class="text-3xl font-bold text-gray-800">45</h3>
+                        </div>
+                        <div class="rounded-full bg-blue-50 p-4 text-blue-500">
+                            <i class="fa-solid fa-user-doctor text-2xl"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md border-l-4 border-emerald-500 p-6 flex items-center justify-between transform transition hover:-translate-y-1 cursor-default">
+                        <div>
+                            <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-1">Assistidas Atendidas</p>
+                            <h3 class="text-3xl font-bold text-gray-800">180</h3>
+                        </div>
+                        <div class="rounded-full bg-emerald-50 p-4 text-emerald-500">
+                            <i class="fa-solid fa-users text-2xl"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md border-l-4 border-amber-500 p-6 flex items-center justify-between transform transition hover:-translate-y-1 cursor-default">
+                        <div>
+                            <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-1">Horas Convertidas</p>
+                            <h3 class="text-3xl font-bold text-gray-800">1.240<span class="text-lg text-gray-500 ml-1">hrs</span></h3>
+                        </div>
+                        <div class="rounded-full bg-amber-50 p-4 text-amber-500">
+                            <i class="fa-solid fa-clock-rotate-left text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfico Chart.js -->
+                <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 mb-8">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xl font-bold text-gray-800">Evolução Mensal: Atendimentos vs Horas Doadas</h3>
+                        <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full font-medium"><i class="fa-regular fa-calendar mr-1"></i> Ano Atual</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-6"><i class="fa-solid fa-circle-info text-ouvidoria-light mr-1"></i> <strong>Dica:</strong> Clique nas barras de qualquer mês para visualizar o detalhamento das voluntárias que realizaram os atendimentos.</p>
+                    <div class="relative h-80 w-full">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================= -->
+            <!-- ABA 2: DETALHE DE VOLUNTÁRIAS             -->
+            <!-- ========================================= -->
+            <section id="voluntarias" class="tab-content max-w-7xl mx-auto">
+                <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden mb-8">
+                    <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Detalhamento de Voluntárias</h3>
+                            <p class="text-sm text-gray-500 mt-1">Clique na linha da profissional para visualizar o histórico completo de atendimentos realizados.</p>
+                        </div>
+                        <button onclick="window.downloadCSV('tabela-voluntarias', 'relatorio_voluntarias.csv')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center shadow-sm">
+                            <i class="fa-solid fa-file-excel mr-2 text-lg"></i> Exportar CSV
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table id="tabela-voluntarias" class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Profissional / Voluntária</th>
+                                    <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Registro (CRP/OAB)</th>
+                                    <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Contato</th>
+                                    <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Atendimentos Realizados</th>
+                                    <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Horas Convertidas</th>
+                                    <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Assistidas Atendidas</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr onclick="window.abrirModal('voluntaria', 'Dra. Amanda Souza')" class="hover:bg-gray-50 transition-colors cursor-pointer group">
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 group-hover:text-ouvidoria-main transition-colors">Dra. Amanda Souza</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-600">CRP 09/11223</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-600">(62) 98888-1234</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center font-bold text-ouvidoria-main">45</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-gray-700 font-semibold">45h</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center font-bold text-emerald-600">12 mulheres</td>
+                                </tr>
+                                <tr onclick="window.abrirModal('voluntaria', 'Beatriz Lima')" class="hover:bg-gray-50 transition-colors cursor-pointer group">
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 group-hover:text-ouvidoria-main transition-colors">Beatriz Lima</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-600">CRP 09/44556</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-600">(62) 99999-5678</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center font-bold text-ouvidoria-main">32</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-gray-700 font-semibold">32h</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center font-bold text-emerald-600">8 mulheres</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================= -->
+            <!-- ABA 3: DETALHE DE ASSISTIDAS              -->
+            <!-- ========================================= -->
+            <section id="assistidas" class="tab-content max-w-7xl mx-auto">
+                <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden mb-8">
+                    <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Detalhamento de Assistidas</h3>
+                            <p class="text-sm text-gray-500 mt-1">Clique na linha para visualizar as sessões recebidas pela assistida e seus respectivos status.</p>
+                        </div>
+                        <button onclick="window.downloadCSV('tabela-assistidas', 'relatorio_assistidas.csv')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center shadow-sm">
+                            <i class="fa-solid fa-file-excel mr-2 text-lg"></i> Exportar CSV
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table id="tabela-assistidas" class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Nome da Assistida</th>
+                                    <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Telefone</th>
+                                    <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Sessões Recebidas</th>
+                                    <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Total de Horas</th>
+                                    <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Data Última Sessão</th>
+                                    <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Status Atual</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr onclick="window.abrirModal('assistida', 'Mariana Silva Oliveira')" class="hover:bg-gray-50 transition-colors cursor-pointer group">
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 group-hover:text-ouvidoria-main transition-colors">Mariana Silva Oliveira</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-600">(62) 98111-2233</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center font-bold text-gray-800">10</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-gray-700 font-semibold">10h</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-gray-600">11/11/2026</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <span class="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-xs font-bold uppercase tracking-wider">Acompanhamento</span>
+                                    </td>
+                                </tr>
+                                <tr onclick="window.abrirModal('assistida', 'Camila Rodrigues')" class="hover:bg-gray-50 transition-colors cursor-pointer group">
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 group-hover:text-ouvidoria-main transition-colors">Camila Rodrigues</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-600">(62) 98333-4455</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center font-bold text-gray-800">12</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-gray-700 font-semibold">12h</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-gray-600">04/11/2026</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <span class="bg-green-100 text-green-800 py-1 px-3 rounded-full text-xs font-bold uppercase tracking-wider">Alta Médica</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================= -->
+            <!-- ABA 4: MATERIAIS DO APP (MOSAICO)         -->
+            <!-- ========================================= -->
+            <section id="materiais" class="tab-content max-w-7xl mx-auto">
+                <div class="mb-8">
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Gestão de Materiais</h2>
+                    <p class="text-gray-500 mt-1">Mosaico de documentos, guias e arquivos ativos no aplicativo mobile.</p>
+                </div>
+
+                <!-- Grid Layout (Mosaico) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Card 1: PDF -->
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-5 flex flex-col h-full transform transition hover:shadow-lg">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="bg-red-50 text-red-500 p-3 rounded-lg">
+                                <i class="fa-solid fa-file-pdf text-2xl"></i>
+                            </div>
+                            <span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-bold">Ativo</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-gray-800 mb-2 line-clamp-1">Guia de Acolhimento</h4>
+                        <p class="text-gray-500 text-sm flex-1 line-clamp-3">Documento oficial com as diretrizes e protocolos de primeiro atendimento para mulheres vítimas de violência.</p>
+                        <div class="mt-4 pt-4 border-t border-gray-100 flex justify-end">
+                            <button class="text-ouvidoria-main hover:text-ouvidoria-light text-sm font-medium"><i class="fa-solid fa-eye mr-1"></i> Visualizar</button>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Imagem -->
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-5 flex flex-col h-full transform transition hover:shadow-lg">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="bg-blue-50 text-blue-500 p-3 rounded-lg">
+                                <i class="fa-solid fa-image text-2xl"></i>
+                            </div>
+                            <span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-bold">Ativo</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-gray-800 mb-2 line-clamp-1">Logo Ouvidoria (PNG)</h4>
+                        <p class="text-gray-500 text-sm flex-1 line-clamp-3">Assinatura visual oficial da Ouvidoria da Mulher com fundo transparente para uso em apresentações.</p>
+                        <div class="mt-4 pt-4 border-t border-gray-100 flex justify-end">
+                            <button class="text-ouvidoria-main hover:text-ouvidoria-light text-sm font-medium"><i class="fa-solid fa-eye mr-1"></i> Visualizar</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- ========================================= -->
+    <!-- MODAL DE HISTÓRICO DETALHADO              -->
+    <!-- ========================================= -->
+    <div id="historico-modal" class="fixed inset-0 bg-gray-900/60 hidden z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col transform scale-95 transition-transform duration-300" id="historico-modal-content">
+            
+            <!-- Header do Modal -->
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
+                <div>
+                    <h3 id="modal-titulo" class="text-xl font-bold text-gray-800">Histórico de Atendimentos</h3>
+                    <p id="modal-subtitulo" class="text-sm text-gray-500 mt-1">Carregando detalhes...</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="window.downloadCSV('modal-table', 'exportacao_detalhada.csv')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center shadow-sm">
+                        <i class="fa-solid fa-file-excel mr-2 hidden sm:inline"></i> Exportar
+                    </button>
+                    <button onclick="window.fecharModal()" class="text-gray-400 hover:text-red-500 transition-colors bg-white hover:bg-red-50 p-2 rounded-full w-10 h-10 flex items-center justify-center shadow-sm">
+                        <i class="fa-solid fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Corpo do Modal (Tabela Dinâmica) -->
+            <div class="p-6 overflow-y-auto flex-1 no-scrollbar">
+                <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                    <table id="modal-table" class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-100" id="modal-table-head">
+                            <!-- Injetado via JS -->
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="modal-table-body">
+                            <!-- Injetado via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Robusto no Escopo Window -->
+    <script>
+        // Amarrar funções ao objeto window garante que o HTML e o Chart.js as encontrem perfeitamente
+        
+        window.switchTab = function(tabId) {
+            const sections = document.querySelectorAll('.tab-content');
+            sections.forEach(section => section.classList.remove('active'));
+
+            const btns = document.querySelectorAll('.nav-btn');
+            btns.forEach(btn => {
+                btn.classList.remove('bg-white/20', 'text-white');
+                btn.classList.add('text-white/70');
+            });
+
+            document.getElementById(tabId).classList.add('active');
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            if(activeBtn) {
+                activeBtn.classList.remove('text-white/70');
+                activeBtn.classList.add('bg-white/20', 'text-white');
+            }
+        };
+
+        window.toggleMobileMenu = function() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        };
+
+        window.downloadCSV = function(tableId, filename) {
+            const table = document.getElementById(tableId);
+            if(!table) return;
+            
+            let csv = [];
+            for (let i = 0; i < table.rows.length; i++) {
+                let row = [];
+                let cols = table.rows[i].querySelectorAll("td, th");
+                
+                for (let j = 0; j < cols.length; j++) {
+                    let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, "").trim();
+                    data = data.replace(/"/g, '""');
+                    row.push('"' + data + '"');
+                }
+                csv.push(row.join(","));
+            }
+            
+            let csvContent = "\uFEFF" + csv.join("\n");
+            let csvFile = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            
+            let downloadLink = document.createElement("a");
+            downloadLink.download = filename;
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = "none";
+            
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        };
+
+        // Mock de Dados Robusto
+        window.historicoMock = {
+            voluntaria: {
+                "Dra. Amanda Souza": [
+                    { data: "11/11/2026", assistida: "Mariana Silva Oliveira", sessao: "#S-1042", status: "Concluída" },
+                    { data: "04/11/2026", assistida: "Camila Rodrigues", sessao: "#S-0991", status: "Concluída" }
+                ],
+                "Beatriz Lima": [
+                    { data: "10/11/2026", assistida: "Juliana Alves Ferreira", sessao: "#S-1033", status: "Concluída" }
+                ]
+            },
+            assistida: {
+                "Mariana Silva Oliveira": [
+                    { data: "11/11/2026", sessao: "#S-1042", status: "Concluída", voluntaria: "Dra. Amanda Souza" }
+                ],
+                "Camila Rodrigues": [
+                    { data: "04/11/2026", sessao: "#S-0991", status: "Concluída", voluntaria: "Dra. Amanda Souza" }
+                ]
+            },
+            mes: {
+                "Nov": [
+                    { voluntaria: "Dra. Amanda Souza", atendimentos: 15, assistidas: 8 },
+                    { voluntaria: "Beatriz Lima", atendimentos: 10, assistidas: 5 }
+                ]
+            }
+        };
+
+        window.abrirModal = function(tipo, nome) {
+            const thead = document.getElementById('modal-table-head');
+            const tbody = document.getElementById('modal-table-body');
+            const modal = document.getElementById('historico-modal');
+            const modalContent = document.getElementById('historico-modal-content');
+
+            if (tipo === 'mes') {
+                document.getElementById('modal-titulo').innerText = `Detalhamento Mensal: ${nome}`;
+                document.getElementById('modal-subtitulo').innerText = `Relação de profissionais e volume de atendimentos.`;
+                thead.innerHTML = `<tr>
+                    <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Profissional / Voluntária</th>
+                    <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Atendimentos no Mês</th>
+                    <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Assistidas Únicas</th>
+                </tr>`;
+            } else if (tipo === 'voluntaria') {
+                document.getElementById('modal-titulo').innerText = `Histórico da Voluntária: ${nome}`;
+                document.getElementById('modal-subtitulo').innerText = `Cronograma de sessões realizadas.`;
+                thead.innerHTML = `<tr>
+                    <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Data</th>
+                    <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Assistida</th>
+                    <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Sessão</th>
+                    <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Status</th>
+                </tr>`;
+            } else {
+                document.getElementById('modal-titulo').innerText = `Histórico da Assistida: ${nome}`;
+                document.getElementById('modal-subtitulo').innerText = `Cronograma de sessões recebidas.`;
+                thead.innerHTML = `<tr>
+                    <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Data</th>
+                    <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Sessão</th>
+                    <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Voluntária</th>
+                    <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Status</th>
+                </tr>`;
+            }
+
+            tbody.innerHTML = '';
+            
+            // Gerar fallback dinâmico para evitar tabelas vazias no click do gráfico
+            let registros = window.historicoMock[tipo][nome];
+            if (!registros && tipo === 'mes') {
+                registros = [
+                    { voluntaria: "Dra. Amanda Souza", atendimentos: Math.floor(Math.random() * 20) + 5, assistidas: Math.floor(Math.random() * 10) + 2 },
+                    { voluntaria: "Beatriz Lima", atendimentos: Math.floor(Math.random() * 15) + 3, assistidas: Math.floor(Math.random() * 8) + 1 }
+                ];
+            } else if (!registros) {
+                registros = [];
+            }
+
+            if (registros.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">Nenhum registro encontrado.</td></tr>`;
+            } else {
+                registros.forEach(reg => {
+                    let statusClass = "bg-gray-100 text-gray-800";
+                    if (reg.status && reg.status.includes('Concluída')) statusClass = "bg-green-100 text-green-800";
+                    
+                    let tr = document.createElement('tr');
+                    tr.className = "hover:bg-gray-50 transition-colors";
+                    
+                    if (tipo === 'voluntaria') {
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">${reg.data}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-600">${reg.assistida}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center font-mono text-gray-500">${reg.sessao}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center"><span class="${statusClass} py-1 px-3 rounded-full text-xs font-bold uppercase">${reg.status}</span></td>
+                        `;
+                    } else if (tipo === 'assistida') {
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">${reg.data}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center font-mono text-gray-500">${reg.sessao}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-600">${reg.voluntaria}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center"><span class="${statusClass} py-1 px-3 rounded-full text-xs font-bold uppercase">${reg.status}</span></td>
+                        `;
+                    } else {
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">${reg.voluntaria}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center font-bold text-ouvidoria-main">${reg.atendimentos}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-gray-700 font-semibold">${reg.assistidas}</td>
+                        `;
+                    }
+                    tbody.appendChild(tr);
+                });
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.fecharModal = function() {
+            const modal = document.getElementById('historico-modal');
+            const modalContent = document.getElementById('historico-modal-content');
+            modal.classList.add('opacity-0');
+            modalContent.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        };
+
+        // Inicializar o Chart.js na inicialização da página
+        window.addEventListener('DOMContentLoaded', () => {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            
+            const labelsMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            const atendimentosData = [50, 65, 80, 75, 100, 115, 105, 125, 140, 135, 150, 100];
+            const horasData = atendimentosData.map(val => Math.round(val * 1.15));
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labelsMeses,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Horas Totais',
+                            data: horasData,
+                            borderColor: '#eab308',
+                            backgroundColor: '#eab308',
+                            borderWidth: 3,
+                            tension: 0.4,
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Atendimentos',
+                            data: atendimentosData,
+                            backgroundColor: '#6A1B9A',
+                            hoverBackgroundColor: '#9c4dcc',
+                            borderRadius: 6,
+                            barPercentage: 0.6,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    // FIX: Captura moderna e robusta de cliques no Chart.js
+                    onClick: (event, elements, chart) => {
+                        if (elements && elements.length > 0) {
+                            // Extrai o índice da primeira barra clicada
+                            const index = elements[0].index;
+                            // Pega o nome do mês a partir do índice
+                            const labelMesClicado = chart.data.labels[index];
+                            // Chama a função global para abrir o modal
+                            window.abrirModal('mes', labelMesClicado);
+                        }
+                    },
+                    onHover: (event, chartElement) => {
+                        event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

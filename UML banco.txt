@@ -1,0 +1,50 @@
++------------------------------------------+
+|                tb_usuario                |
++------------------------------------------+
+| PK  id_usuario          : BIGINT         |
+|     nome_usuario        : VARCHAR        |
+|     email               : VARCHAR        |
+|     crp                 : VARCHAR        |
+|     contato             : VARCHAR        |
+|     linkedin            : VARCHAR        |
+|     acesso_adm          : INT / VARCHAR  |
++------------------------------------------+
+                    | 1
+                    | acompanha
+                    | *
++------------------------------------------+
+|               tb_assistida               |
++------------------------------------------+
+| PK  id_assistida        : BIGINT         |
+|     nome                : VARCHAR        |
+|     contato             : VARCHAR        |
+|     status_atendimento  : VARCHAR        |
+| FK  id_usuario          : BIGINT         |
++------------------------------------------+
+                    | 1
+                    | registra
+                    | *
++------------------------------------------+
+|                tb_sessao                 |
++------------------------------------------+
+| PK  id_sessao                   : BIGINT |
+|     numero_sessao               : INT    |
+|     data_sessao                 : DATE   |
+|     horario_sessao              : TIME   |
+|     indicadores                 : VARCHAR|
+|     indicador_sessao_realizada  : FLAG   |
+|     indicador_desistencia       : FLAG   |
+| FK  id_assistida                : BIGINT |
++------------------------------------------+
+
++------------------------------------------+
+|             tb_informacoes               |  (Entidade independente - CMS)
++------------------------------------------+
+| PK  id                  : BIGINT         |
+|     titulo              : TEXT           |
+|     descricao           : TEXT           |
+|     tipo                : TEXT           |
+|     url                 : TEXT           |
+|     conteudo            : TEXT           |
+|     ordem               : INT            |
++------------------------------------------+

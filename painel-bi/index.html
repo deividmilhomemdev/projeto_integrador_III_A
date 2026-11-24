@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- Politica de seguranca de conteudo: so carrega scripts deste site e das CDNs abaixo,
+         e so conversa com o Supabase. Bloqueia scripts injetados por terceiros. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+    <title>Ouvidoria da Mulher - Portal Gerencial</title>
+    <link rel="icon" type="image/png" href="assets/logo.png">
+
+    <!-- Tailwind CSS (versao fixa) + paleta institucional -->
+    <script src="https://cdn.tailwindcss.com/3.4.5"></script>
+    <script src="assets/tailwind.config.js"></script>
+
+    <!-- Chart.js e cliente Supabase (versoes fixas) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+
+    <!-- Icones e fonte -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+
+    <style>
+        /* ---------- Abas ---------- */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeUp 0.45s cubic-bezier(.2,.7,.2,1); }
+
+        /* ---------- Animacoes ---------- */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(.94) translateY(10px); } to { opacity: 1; transform: none; } }
+        @keyframes flutuar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+        /* Entrada escalonada: o atraso vem da variavel --i definida em cada item */
+        .anim-item { opacity: 0; animation: fadeUp .5s cubic-bezier(.2,.7,.2,1) forwards; animation-delay: calc(var(--i, 0) * 55ms); }
+        .anim-login { animation: scaleIn .6s cubic-bezier(.2,.7,.2,1); }
+        .logo-flutua { animation: flutuar 5s ease-in-out infinite; }
+
+        /* Cartoes que "levantam" ao passar o mouse */
+        .card-hover { transition: transform .25s ease, box-shadow .25s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 14px 28px -10px rgba(106, 27, 154, .28); }
+        .card-hover .icone-kpi { transition: transform .35s cubic-bezier(.3,1.6,.5,1); }
+        .card-hover:hover .icone-kpi { transform: scale(1.12) rotate(-6deg); }
+
+        /* Botoes com leve resposta ao clique */
+        .btn-anim { transition: transform .15s ease, background-color .2s, color .2s, box-shadow .2s; }
+        .btn-anim:active { transform: scale(.96); }
+
+        /* Menu lateral: barra indicadora da aba ativa */
+        .nav-btn { position: relative; transition: background-color .25s, color .25s, padding-left .25s; }
+        .nav-btn::before { content: ''; position: absolute; left: 0; top: 20%; height: 60%; width: 4px; border-radius: 4px;
+                           background: #fff; transform: scaleY(0); transition: transform .25s ease; }
+        .nav-btn.ativo::before { transform: scaleY(1); }
+        .nav-btn.ativo { padding-left: 1.25rem; }
+
+        /* Linhas de tabela */
+        tbody tr.linha-click { transition: background-color .2s; }
+        tr.linha-click:focus { outline: 2px solid #9c4dcc; outline-offset: -2px; }
+
+        /* Modal com fade + zoom */
+        #modal { opacity: 0; transition: opacity .2s ease; }
+        #modal .modal-caixa { transform: scale(.95) translateY(8px); transition: transform .25s cubic-bezier(.2,.7,.2,1); }
+        #modal.aberto { opacity: 1; }
+        #modal.aberto .modal-caixa { transform: none; }
+
+        /* Acessibilidade: respeita quem pede menos movimento no sistema */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+            .anim-item { opacity: 1; }
+        }
+
+        /* ---------- Diversos ---------- */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1em;
+        }
+    </style>
+</head>
+<body class="bg-ouvidoria-bg text-gray-800 font-sans">
+
+    <!-- ========================================= -->
+    <!-- TELA DE LOGIN                             -->
+    <!-- ========================================= -->
+    <section id="tela-login" class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-ouvidoria-dark via-ouvidoria-main to-ouvidoria-light">
+        <div class="anim-login bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+            <div class="flex flex-col items-center text-center mb-6">
+                <img src="assets/logo.png" alt="Ouvidoria da Mulher - Câmara Municipal de Goiânia" class="logo-flutua w-36 h-36 object-contain">
+                <h1 class="text-xl font-bold text-gray-800 mt-2">Portal Gerencial</h1>
+                <p class="text-sm text-gray-500">Acesso exclusivo da coordenação</p>
+            </div>
+
+            <form id="form-login" class="space-y-4" novalidate>
+                <div>
+                    <label for="login-email" class="block text-sm font-semibold text-gray-700 mb-1">E-mail</label>
+                    <input id="login-email" type="email" autocomplete="username" required
+                           class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 outline-none transition focus:ring-2 focus:ring-ouvidoria-light focus:border-ouvidoria-main">
+                </div>
+                <div>
+                    <label for="login-senha" class="block text-sm font-semibold text-gray-700 mb-1">Senha</label>
+                    <input id="login-senha" type="password" autocomplete="current-password" required
+                           class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 outline-none transition focus:ring-2 focus:ring-ouvidoria-light focus:border-ouvidoria-main">
+                </div>
+
+                <p id="login-erro" class="hidden text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3" role="alert"></p>
+
+                <button id="btn-entrar" type="submit"
+                        class="btn-anim w-full bg-ouvidoria-main hover:bg-ouvidoria-dark text-white font-semibold py-3 rounded-lg hover:shadow-lg disabled:opacity-60 disabled:cursor-wait">
+                    <i class="fa-solid fa-right-to-bracket mr-2"></i><span>Entrar</span>
+                </button>
+            </form>
+
+            <p class="text-xs text-gray-400 mt-6 text-center">
+                <i class="fa-solid fa-lock mr-1"></i> Conexão criptografada · Dados tratados conforme a LGPD
+            </p>
+        </div>
+
+        <p class="text-[11px] text-white/60 mt-6 text-center max-w-md leading-relaxed">
+            Portal Gerencial v1.0 · Desenvolvido por
+            <a href="https://www.linkedin.com/in/deivid-milhomem-ba7777135/" target="_blank" rel="noopener noreferrer" class="underline decoration-white/30 hover:text-white">Deivid Milhomem</a>
+            · Projeto acadêmico voluntário, com o apoio da equipe da Ouvidoria da Mulher.
+        </p>
+    </section>
+
+    <!-- ========================================= -->
+    <!-- PAINEL (exibido apos login)               -->
+    <!-- ========================================= -->
+    <div id="app" class="hidden h-screen flex overflow-hidden">
+
+        <!-- Menu Lateral -->
+        <aside class="bg-ouvidoria-main text-white w-64 flex-shrink-0 hidden md:flex flex-col shadow-2xl z-20">
+            <div class="p-5 border-b border-ouvidoria-light/30">
+                <div class="bg-white rounded-xl p-2 shadow-lg flex items-center justify-center">
+                    <img src="assets/logo.png" alt="Ouvidoria da Mulher - Câmara Municipal de Goiânia" class="h-24 w-auto object-contain">
+                </div>
+                <p class="text-center text-xs font-semibold tracking-widest uppercase text-white/80 mt-3">Portal Gerencial</p>
+            </div>
+
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto no-scrollbar">
+                <button data-tab="painel" class="nav-btn w-full flex items-center px-4 py-3 rounded-lg font-medium">
+                    <i class="fa-solid fa-chart-line w-6 text-center"></i> Resumo Geral
+                </button>
+                <button data-tab="voluntarias" class="nav-btn w-full flex items-center px-4 py-3 rounded-lg font-medium">
+                    <i class="fa-solid fa-user-doctor w-6 text-center"></i> Voluntárias
+                </button>
+                <button data-tab="assistidas" class="nav-btn w-full flex items-center px-4 py-3 rounded-lg font-medium">
+                    <i class="fa-solid fa-users w-6 text-center"></i> Assistidas
+                </button>
+                <button data-tab="materiais" class="nav-btn w-full flex items-center px-4 py-3 rounded-lg font-medium">
+                    <i class="fa-solid fa-folder-open w-6 text-center"></i> Materiais
+                </button>
+                <button data-tab="links" class="nav-btn w-full flex items-center px-4 py-3 rounded-lg font-medium">
+                    <i class="fa-solid fa-link w-6 text-center"></i> Links Úteis
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-ouvidoria-light/30 text-xs text-white/70 space-y-2">
+                <p class="truncate" title="Usuária conectada"><i class="fa-solid fa-circle-user mr-1"></i> <span class="usuario-logado"></span></p>
+                <button class="btn-sair btn-anim w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">
+                    <i class="fa-solid fa-right-from-bracket"></i> Sair
+                </button>
+                <p class="text-center text-white/50">Portal Gerencial v1.0</p>
+            </div>
+        </aside>
+
+        <!-- Conteudo Principal -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+
+            <!-- Barra Superior -->
+            <header class="bg-white shadow-sm border-b border-gray-200 z-10">
+                <div class="px-4 py-3 md:px-8 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                    <div class="flex items-center justify-between w-full lg:w-auto">
+                        <div class="flex items-center">
+                            <button id="btn-menu-mobile" class="md:hidden text-ouvidoria-main mr-3" aria-label="Abrir menu">
+                                <i class="fa-solid fa-bars text-2xl"></i>
+                            </button>
+                            <img src="assets/logo.png" alt="" class="md:hidden h-9 w-9 object-contain mr-2">
+                            <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                                <i id="icone-cabecalho" class="fa-solid fa-filter text-ouvidoria-light mr-2 text-base"></i>
+                                <span id="titulo-cabecalho">Segmentadores</span>
+                            </h2>
+                        </div>
+                        <button class="btn-sair md:hidden text-gray-500 hover:text-red-600" aria-label="Sair">
+                            <i class="fa-solid fa-right-from-bracket text-xl"></i>
+                        </button>
+                    </div>
+
+                    <div id="barra-filtros" class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                        <label class="sr-only" for="filtro-ano">Ano</label>
+                        <select id="filtro-ano" class="bg-gray-50 border border-gray-300 text-gray-700 text-sm rounded-lg p-2.5 pr-8 outline-none shadow-sm cursor-pointer transition hover:border-ouvidoria-light"></select>
+
+                        <label class="sr-only" for="filtro-mes">Mês</label>
+                        <select id="filtro-mes" class="bg-gray-50 border border-gray-300 text-gray-700 text-sm rounded-lg p-2.5 pr-8 outline-none shadow-sm cursor-pointer transition hover:border-ouvidoria-light"></select>
+
+                        <label class="sr-only" for="filtro-voluntaria">Voluntária</label>
+                        <select id="filtro-voluntaria" class="bg-gray-50 border border-gray-300 text-gray-700 text-sm rounded-lg p-2.5 pr-8 outline-none shadow-sm cursor-pointer transition hover:border-ouvidoria-light max-w-[16rem]"></select>
+
+                        <button id="btn-atualizar" class="btn-anim bg-white border border-gray-300 hover:border-ouvidoria-main hover:text-ouvidoria-main text-gray-600 text-sm rounded-lg px-3 py-2.5 shadow-sm" title="Recarregar dados do banco">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="linha-periodo" class="px-4 md:px-8 pb-2 text-xs text-gray-400 flex flex-wrap gap-x-4">
+                    <span><i class="fa-regular fa-calendar mr-1"></i>Período: <strong id="rotulo-periodo" class="text-gray-600">—</strong></span>
+                    <span><i class="fa-regular fa-clock mr-1"></i>Dados atualizados em <span id="rotulo-atualizacao">—</span></span>
+                </div>
+
+                <!-- Menu mobile -->
+                <div id="menu-mobile" class="hidden md:hidden bg-ouvidoria-main shadow-xl absolute w-full z-30">
+                    <nav class="flex flex-col p-2">
+                        <button data-tab="painel" class="text-left px-4 py-3 text-white font-medium hover:bg-white/10 rounded"><i class="fa-solid fa-chart-line w-6"></i> Resumo Geral</button>
+                        <button data-tab="voluntarias" class="text-left px-4 py-3 text-white font-medium hover:bg-white/10 rounded"><i class="fa-solid fa-user-doctor w-6"></i> Voluntárias</button>
+                        <button data-tab="assistidas" class="text-left px-4 py-3 text-white font-medium hover:bg-white/10 rounded"><i class="fa-solid fa-users w-6"></i> Assistidas</button>
+                        <button data-tab="materiais" class="text-left px-4 py-3 text-white font-medium hover:bg-white/10 rounded"><i class="fa-solid fa-folder-open w-6"></i> Materiais</button>
+                        <button data-tab="links" class="text-left px-4 py-3 text-white font-medium hover:bg-white/10 rounded"><i class="fa-solid fa-link w-6"></i> Links Úteis</button>
+                    </nav>
+                </div>
+            </header>
+
+            <!-- Aviso de erro de carregamento -->
+            <div id="aviso-erro" class="hidden mx-4 md:mx-8 mt-4 bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 text-sm flex items-start gap-3" role="alert">
+                <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+                <div class="flex-1"><strong>Não foi possível carregar os dados.</strong> <span id="aviso-erro-texto"></span></div>
+                <button id="btn-tentar-novamente" class="font-semibold underline">Tentar novamente</button>
+            </div>
+
+            <!-- Area de rolagem -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar bg-ouvidoria-bg relative flex flex-col">
+
+                <!-- Carregando -->
+                <div id="carregando" class="hidden absolute inset-0 bg-ouvidoria-bg/80 z-10 flex items-center justify-center">
+                    <div class="text-ouvidoria-main text-center">
+                        <img src="assets/logo.png" alt="" class="logo-flutua w-20 h-20 object-contain mx-auto">
+                        <p class="mt-3 text-sm font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Carregando dados do Supabase...</p>
+                    </div>
+                </div>
+
+                <div class="flex-1">
+                <!-- ABA 1: RESUMO GERAL -->
+                <section id="painel" class="tab-content active max-w-7xl mx-auto">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+                        <div class="kpi card-hover bg-white rounded-xl shadow-md border-l-4 border-purple-600 p-6 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-1">Atendimentos Realizados</p>
+                                <h3 id="kpi-atendimentos" class="text-3xl font-bold text-gray-800 tabular-nums">—</h3>
+                                <p id="kpi-atendimentos-sub" class="text-xs text-gray-500 mt-1"></p>
+                            </div>
+                            <div class="icone-kpi rounded-full bg-purple-50 p-4 text-purple-600"><i class="fa-solid fa-handshake-angle text-2xl"></i></div>
+                        </div>
+                        <div class="kpi card-hover bg-white rounded-xl shadow-md border-l-4 border-blue-500 p-6 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-1">Voluntárias Ativas</p>
+                                <h3 id="kpi-voluntarias" class="text-3xl font-bold text-gray-800 tabular-nums">—</h3>
+                                <p id="kpi-voluntarias-sub" class="text-xs text-gray-500 mt-1"></p>
+                            </div>
+                            <div class="icone-kpi rounded-full bg-blue-50 p-4 text-blue-500"><i class="fa-solid fa-user-doctor text-2xl"></i></div>
+                        </div>
+                        <div class="kpi card-hover bg-white rounded-xl shadow-md border-l-4 border-emerald-500 p-6 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-1">Assistidas Atendidas</p>
+                                <h3 id="kpi-assistidas" class="text-3xl font-bold text-gray-800 tabular-nums">—</h3>
+                                <p id="kpi-assistidas-sub" class="text-xs text-gray-500 mt-1"></p>
+                            </div>
+                            <div class="icone-kpi rounded-full bg-emerald-50 p-4 text-emerald-500"><i class="fa-solid fa-users text-2xl"></i></div>
+                        </div>
+                        <div class="kpi card-hover bg-white rounded-xl shadow-md border-l-4 border-amber-500 p-6 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-1">Horas Doadas</p>
+                                <h3 id="kpi-horas" class="text-3xl font-bold text-gray-800 tabular-nums">—</h3>
+                                <p id="kpi-horas-sub" class="text-xs text-gray-500 mt-1"></p>
+                            </div>
+                            <div class="icone-kpi rounded-full bg-amber-50 p-4 text-amber-500"><i class="fa-solid fa-clock-rotate-left text-2xl"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 mb-8">
+                        <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+                            <h3 class="text-xl font-bold text-gray-800">Evolução Mensal: Atendimentos vs Horas Doadas</h3>
+                            <span id="rotulo-ano-grafico" class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full font-medium"></span>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-6"><i class="fa-solid fa-circle-info text-ouvidoria-light mr-1"></i> <strong>Dica:</strong> clique na barra de um mês para ver as voluntárias que realizaram os atendimentos.</p>
+                        <div class="relative h-80 w-full">
+                            <canvas id="grafico-mensal" aria-label="Gráfico de atendimentos e horas por mês" role="img"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ABA 2: VOLUNTARIAS -->
+                <section id="voluntarias" class="tab-content max-w-7xl mx-auto">
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden mb-8">
+                        <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">Detalhamento de Voluntárias</h3>
+                                <p class="text-sm text-gray-500 mt-1">Clique na linha da profissional para ver as sessões do período.</p>
+                            </div>
+                            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                                <input id="busca-voluntarias" type="search" placeholder="Buscar por nome ou CRP" class="flex-1 sm:w-56 bg-gray-50 border border-gray-300 text-sm rounded-lg p-2 outline-none transition focus:border-ouvidoria-main focus:ring-2 focus:ring-ouvidoria-light/40">
+                                <button id="csv-voluntarias" class="btn-anim bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm hover:shadow-md">
+                                    <i class="fa-solid fa-file-excel mr-2 text-lg"></i> Exportar CSV
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Profissional / Voluntária</th>
+                                        <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Registro (CRP)</th>
+                                        <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Contato</th>
+                                        <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Atendimentos Realizados</th>
+                                        <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Horas Doadas</th>
+                                        <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Assistidas Atendidas</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-voluntarias" class="bg-white divide-y divide-gray-200"></tbody>
+                                <tfoot id="tfoot-voluntarias"></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ABA 3: ASSISTIDAS -->
+                <section id="assistidas" class="tab-content max-w-7xl mx-auto">
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden mb-8">
+                        <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">Detalhamento de Assistidas</h3>
+                                <p class="text-sm text-gray-500 mt-1">Clique na linha para ver as sessões recebidas no período.</p>
+                                <label class="inline-flex items-center gap-2 text-sm text-gray-600 mt-2 cursor-pointer">
+                                    <input id="chk-sem-sessoes" type="checkbox" class="accent-ouvidoria-main"> Incluir assistidas sem sessões no período
+                                </label>
+                            </div>
+                            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                                <input id="busca-assistidas" type="search" placeholder="Buscar por nome ou telefone" class="flex-1 sm:w-56 bg-gray-50 border border-gray-300 text-sm rounded-lg p-2 outline-none transition focus:border-ouvidoria-main focus:ring-2 focus:ring-ouvidoria-light/40">
+                                <button id="csv-assistidas" class="btn-anim bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm hover:shadow-md">
+                                    <i class="fa-solid fa-file-excel mr-2 text-lg"></i> Exportar CSV
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Nome da Assistida</th>
+                                        <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Telefone</th>
+                                        <th scope="col" class="px-6 py-4 text-left font-bold text-gray-700">Voluntária Responsável</th>
+                                        <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Sessões Realizadas</th>
+                                        <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Total de Horas</th>
+                                        <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Última Sessão</th>
+                                        <th scope="col" class="px-6 py-4 text-center font-bold text-gray-700">Situação Atual</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-assistidas" class="bg-white divide-y divide-gray-200"></tbody>
+                                <tfoot id="tfoot-assistidas"></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ABA 4: MATERIAIS -->
+                <section id="materiais" class="tab-content max-w-7xl mx-auto">
+                    <div class="mb-8">
+                        <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Gestão de Materiais</h2>
+                        <p class="text-gray-500 mt-1">Documentos, guias e informativos publicados na Central de Apoio do aplicativo.</p>
+                    </div>
+                    <div id="grid-materiais" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+                </section>
+
+                <!-- ABA 5: LINKS UTEIS -->
+                <section id="links" class="tab-content max-w-7xl mx-auto">
+                    <div class="mb-8">
+                        <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Links Úteis</h2>
+                        <p class="text-gray-500 mt-1">Canais oficiais e serviços da rede de proteção à mulher. Os links abrem em uma nova aba.</p>
+                    </div>
+                    <div id="lista-links" class="space-y-10"></div>
+                </section>
+                </div>
+
+                <!-- Rodape discreto -->
+                <footer class="max-w-7xl mx-auto w-full mt-10 pt-4 border-t border-gray-200 text-center text-[11px] text-gray-400 leading-relaxed">
+                    Portal Gerencial v1.0 · Desenvolvido por
+                    <a href="https://www.linkedin.com/in/deivid-milhomem-ba7777135/" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-ouvidoria-main underline decoration-gray-300">Deivid Milhomem <i class="fa-brands fa-linkedin"></i></a>
+                    · Projeto acadêmico voluntário, realizado com o apoio da equipe da Ouvidoria da Mulher da Câmara Municipal de Goiânia.
+                </footer>
+            </div>
+        </main>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- MODAL (detalhamentos e materiais)         -->
+    <!-- ========================================= -->
+    <div id="modal" class="fixed inset-0 bg-gray-900/60 hidden z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+        <div class="modal-caixa bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-start gap-4 bg-gray-50 rounded-t-xl">
+                <div class="min-w-0">
+                    <h3 id="modal-titulo" class="text-xl font-bold text-gray-800 break-words"></h3>
+                    <p id="modal-subtitulo" class="text-sm text-gray-500 mt-1"></p>
+                </div>
+                <div class="flex items-center gap-3 flex-shrink-0">
+                    <button id="modal-csv" class="btn-anim bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm">
+                        <i class="fa-solid fa-file-excel sm:mr-2"></i><span class="hidden sm:inline">Exportar</span>
+                    </button>
+                    <button id="modal-fechar" class="btn-anim text-gray-400 hover:text-red-500 bg-white hover:bg-red-50 rounded-full w-10 h-10 flex items-center justify-center shadow-sm" aria-label="Fechar">
+                        <i class="fa-solid fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <div id="modal-material" class="hidden"></div>
+                <div id="modal-tabela-wrap" class="overflow-x-auto border border-gray-200 rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-100" id="modal-thead"></thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="modal-tbody"></tbody>
+                        <tfoot id="modal-tfoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/config.js"></script>
+    <script src="assets/links-uteis.js"></script>
+    <script src="assets/app.js"></script>
+</body>
+</html>
