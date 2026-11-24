@@ -55,7 +55,7 @@ O programa de voluntariado foi formalizado em agosto de 2021. Nele, psicólogas 
 
 ## 2. Problema identificado
 
-Até o início da parceria, o controle dos atendimentos era feito com formulários on-line e anotações em bloco de texto. Em projetos integradores anteriores foi desenvolvido um [aplicativo em Flutter](https://ouvidoriadamulhergoianiavoluntariado.netlify.app/), ligado a um banco PostgreSQL no Supabase. Nele, cada psicóloga vincula suas assistidas e registra as sessões realizadas, em andamento ou com desistência. Durante este trabalho, a base já reunia **cerca de 780 sessões**.
+Até o início da parceria, o controle dos atendimentos era feito com formulários on-line e anotações em bloco de texto. Em projetos integradores anteriores foi desenvolvido um aplicativo em Flutter, ligado a um banco PostgreSQL no Supabase. Nele, cada psicóloga vincula suas assistidas e registra as sessões realizadas, em andamento ou com desistência. Durante este trabalho, a base já reunia **cerca de 780 sessões**.
 
 Os dados existiam, mas não havia uma forma simples de consultá-los de maneira consolidada. A tela administrativa do aplicativo oferece apenas um resumo, e consultar o banco diretamente exige conhecimento técnico. A coordenação levantou três demandas:
 
@@ -347,7 +347,6 @@ O passo a passo detalhado, com o caminho de cada menu, solução de problemas e 
 - KUROSE, James F.; ROSS, Keith W. **Redes de computadores e a Internet:** uma abordagem top-down. 8. ed. São Paulo: Pearson, 2021.
 - MDN WEB DOCS. **Content Security Policy (CSP).** Disponível em: <https://developer.mozilla.org/pt-BR/docs/Web/HTTP/CSP>. Acesso em: 23 nov. 2026.
 - NETLIFY. **Custom headers.** Disponível em: <https://docs.netlify.com/routing/headers/>. Acesso em: 23 nov. 2026.
-- OUVIDORIA DA MULHER. **Aplicativo Ouvidoria da Mulher.** Disponível em: <https://ouvidoriadamulhergoianiavoluntariado.netlify.app/>. Acesso em: 23 nov. 2026.
 - OWASP FOUNDATION. **Cross Site Scripting Prevention Cheat Sheet.** Disponível em: <https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html>. Acesso em: 23 nov. 2026.
 - STALLINGS, William; BROWN, Lawrie. **Segurança de computadores:** princípios e práticas. 2. ed. Rio de Janeiro: Elsevier, 2014.
 - SUPABASE. **Auth.** Disponível em: <https://supabase.com/docs/guides/auth>. Acesso em: 23 nov. 2026.
