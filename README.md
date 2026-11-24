@@ -250,7 +250,6 @@ A autorização **não depende só da interface**. A função `is_admin_painel()
   - página de Links Úteis;
   - logo institucional;
   - animações de navegação.
-- **Considerações da instituição:** **[REGISTRAR AS CONSIDERAÇÕES DA INSTITUIÇÃO]**
 
 ---
 
